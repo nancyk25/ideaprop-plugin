@@ -1,0 +1,13 @@
+{
+    "name": "nancy/idea-prop-plugin",
+    "description": "Ideatree plugin example",
+    "type": "project",
+    "license": "GPl",
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "src\\":"./src"
+        }
+    }
+}
