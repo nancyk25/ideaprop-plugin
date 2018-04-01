@@ -19,11 +19,6 @@ class AdminCallbacks extends BaseController
         return require_once("$this->plugin_path/templates/cpt.php");
     }
 
-    public function adminTaxonomy()
-    {
-        return require_once("$this->plugin_path/templates/taxonomy.php");
-    }
-
     public function ideaPropOptionsGroup ( $input )
     {
         return $input;

@@ -41,15 +41,17 @@ class CustomPostTypeController extends BaseController
 
         $this->setFields();
 
-        $this->settings->addSubpages( $this->subpages )->register();
+		$this->settings->addSubpages( $this->subpages )->register();
         
-        $this->storeCustomPostTypes();
+		$this->storeCustomPostTypes();
 
         if ( ! empty( $this->custom_post_types) ){
-        add_action('init', array( $this,'registerCustomPostType') );
-        }
-    }
-
+			add_action('init', array( $this,'registerCustomPostType') );
+			add_action( 'init', array( $this, 'storeCustomTaxonomies' ));
+			add_action( 'add_meta_boxes', array( $this , 'addMetaBox' ));
+		}
+	}
+	
     public function setSubpages()
     {
         	$this->subpages = array(
@@ -58,7 +60,8 @@ class CustomPostTypeController extends BaseController
 				'page_title' => 'Custom Post Types', 
 				'menu_title' => 'CPT', 
 				'capability' => 'manage_options', 
-				'menu_slug' => 'ideaProp_cpt', 
+				'menu_slug' => 'ideaProp_cpt',
+				//this call back set's the subpage under ideaProp called CPT and sends a callback to the template
 				'callback' => array( $this->callbacks, 'adminCpt' )
 			)
 		);
@@ -93,11 +96,7 @@ class CustomPostTypeController extends BaseController
 
     public function setFields()
 	{
-        //post type id
-        //singular name
-        //plural name
-        //public
-        //has_archive
+
 		$args = array(
 			array(
 				'id' => 'post_type',
@@ -108,7 +107,7 @@ class CustomPostTypeController extends BaseController
 				'args' => array(
 					'option_name' => 'ideaProp_plugin_cpt',
 					'label_for' => 'post_type',
-					'placeholder' => 'eg. Property'
+					'placeholder' => 'eg. My Property'
 				)
 			),
 			array(
@@ -132,7 +131,7 @@ class CustomPostTypeController extends BaseController
 				'args' => array(
 					'option_name' => 'ideaProp_plugin_cpt',
 					'label_for' => 'plural_name',
-					'placeholder' => 'eg. Products'
+					'placeholder' => 'eg. Properties'
 				)
 			),
 			array(
@@ -166,78 +165,81 @@ class CustomPostTypeController extends BaseController
 
     public function storeCustomPostTypes()
     {
+		$options = get_option('ideaProp_plugin_cpt');
+
         $this->custom_post_types[] = array(
-			'post_type'             => 'test',
-			'name'                  => 'Properties',
-			'singular_name'         => 'Property',
-			'menu_name'             => 'Property',
-			'name_admin_bar'        => '',
-			'archives'              => '',
-			'attributes'            => '',
-			'parent_item_colon'     => '',
-			'all_items'             => '',
-			'add_new_item'          => '',
-			'add_new'               => '',
-			'new_item'              => '',
-			'edit_item'             => '',
-			'update_item'           => '',
-			'view_item'             => '',
-			'view_items'            => '',
-			'search_items'          => '',
-			'not_found'             => '',
-			'not_found_in_trash'    => '',
-			'featured_image'        => '',
-			'set_featured_image'    => '',
-			'remove_featured_image' => '',
-			'use_featured_image'    => '',
-			'insert_into_item'      => '',
-			'uploaded_to_this_item' => '',
-			'items_list'            => '',
-			'items_list_navigation' => '',
-			'filter_items_list'     => '',
-			'label'                 => '',
-			'description'           => '',
-			'supports'              => false,
-			'taxonomies'            => array(),
-			'hierarchical'          => false,
-			'public'                => true,
-			'show_ui'               => true,
-			'show_in_menu'          => true,
-			'menu_position'         => 5,
-			'show_in_admin_bar'     => true,
-			'show_in_nav_menus'     => true,
-			'can_export'            => true,
-			'has_archive'           => true,
-			'exclude_from_search'   => false,
-			'publicly_queryable'    => true,
-			'capability_type'       => 'page'
+				'post_type'             => 'property',
+				'name'                  => $options['plural_name'],
+				'singular_name'         => $options['singular_name'],
+				'menu_name'             => $options['plural_name'],
+				'name_admin_bar'        => $options['singular_name'],
+				'archives'              => $options['singular_name'] . ' Archives',
+				'attributes'            => $options['singular_name'] . ' Attributes',
+				'parent_item_colon'     => 'Parent ' . $options['singular_name'],
+				'all_items'             => 'All ' . $options['plural_name'],
+				'add_new_item'          => 'Add New ' . $options['singular_name'],
+				'add_new'               => 'Add New',
+				'new_item'              => 'New ' . $options['singular_name'],
+				'edit_item'             => 'Edit ' . $options['singular_name'],
+				'update_item'           => 'Update ' . $options['singular_name'],
+				'view_item'             => 'View ' . $options['singular_name'],
+				'view_items'            => 'View ' . $options['plural_name'],
+				'search_items'          => 'Search ' . $options['plural_name'],
+				'not_found'             => 'No ' . $options['singular_name'] . ' Found',
+				'not_found_in_trash'    => 'No ' . $options['singular_name'] . ' Found in Trash',
+				'featured_image'        => 'Featured Image',
+				'set_featured_image'    => 'Set Featured Image',
+				'remove_featured_image' => 'Remove Featured Image',
+				'use_featured_image'    => 'Use Featured Image',
+				'insert_into_item'      => 'Insert into ' . $options['singular_name'],
+				'uploaded_to_this_item' => 'Upload to this ' . $options['singular_name'],
+				'items_list'            => $options['plural_name'] . ' List',
+				'items_list_navigation' => $options['plural_name'] . ' List Navigation',
+				'filter_items_list'     => 'Filter' . $options['plural_name'] . ' List',
+				'label'                 => $options['singular_name'],
+				'description'           => $options['plural_name'] . 'Custom Post Type',
+				'supports'              => array( 'title', 'editor', 'thumbnail' ),
+				'taxonomies'            => array( 'category', 'post_tag'),
+				'hierarchical'          => false,
+				'public'                => $options['public'],
+				'show_ui'               => true,
+				'show_in_menu'          => true,
+				'menu_position'         => 5,
+				'show_in_admin_bar'     => true,
+				'show_in_nav_menus'     => true,
+				'can_export'            => true,
+				'has_archive'           => $options['has_archive'],
+				'exclude_from_search'   => false,
+				'publicly_queryable'    => true,
+				'capability_type'       => 'post',
+				// 'register_meta_box_cb'  => $options['register_meta_box_cb']
 		);
     }
 
     public function registerCustomPostType()
     {
         foreach ($this->custom_post_types as $post_type){
-            register_post_type( $post_type['post_type'],
-array(
+            register_post_type( 'property',
+				array(
 					'labels' => array(
-						'name'                  => $post_type['name'],
-						'singular_name'         => $post_type['singular_name'],
-						'menu_name'             => $post_type['menu_name'],
+						'name'                  => 'Property',
+						'singular_name'         => 'Property',
+						'menu_name'             => 'Properties',
 						'name_admin_bar'        => $post_type['name_admin_bar'],
 						'archives'              => $post_type['archives'],
 						'attributes'            => $post_type['attributes'],
 						'parent_item_colon'     => $post_type['parent_item_colon'],
-						'all_items'             => $post_type['all_items'],
-						'add_new_item'          => $post_type['add_new_item'],
-						'add_new'               => $post_type['add_new'],
-						'new_item'              => $post_type['new_item'],
-						'edit_item'             => $post_type['edit_item'],
-						'update_item'           => $post_type['update_item'],
-						'view_item'             => $post_type['view_item'],
-						'view_items'            => $post_type['view_items'],
-						'search_items'          => $post_type['search_items'],
-						'not_found'             => $post_type['not_found'],
-						'not_found_in_trash'    => $post_type['not_found_in_trash'],
+						'all_items'             => 'All Properties',
+						'add_new_item'          => 'Add Property',
+						'add_new'               => 'Add New',
+						'new_item'              => 'New Item',
+						'edit_item'             => 'Edit Item',
+						'update_item'           => 'Update Item',
+						'view_item'             => 'View Item',
+						'view_items'            => 'View Items',
+						'search_items'          => 'Search Properties',
+						'not_found'             => 'No properties found',
+						'not_found_in_trash'    => 'No items found',
 						'featured_image'        => $post_type['featured_image'],
 						'set_featured_image'    => $post_type['set_featured_image'],
 						'remove_featured_image' => $post_type['remove_featured_image'],
@@ -250,22 +252,92 @@ array(
 					),
 					'label'                     => $post_type['label'],
 					'description'               => $post_type['description'],
-					'supports'                  => $post_type['supports'],
-					'taxonomies'                => $post_type['taxonomies'],
-					'hierarchical'              => $post_type['hierarchical'],
-					'public'                    => $post_type['public'],
+					'supports'                  => array(
+						'title',
+						'editor',
+						'excerpt',
+						'thumbnail',
+						'revisions',
+						'custom-fields'
+					),
+					// 'register_meta_box_cb'      => 'met',
+					'taxonomies'                => array('category','post_tag'),
+					'hierarchical'              => false,
+					'public'                    => true,
 					'show_ui'                   => $post_type['show_ui'],
 					'show_in_menu'              => $post_type['show_in_menu'],
-					'menu_position'             => $post_type['menu_position'],
+					'menu_position'             => 5,
 					'show_in_admin_bar'         => $post_type['show_in_admin_bar'],
 					'show_in_nav_menus'         => $post_type['show_in_nav_menus'],
 					'can_export'                => $post_type['can_export'],
-					'has_archive'               => $post_type['has_archive'],
-					'exclude_from_search'       => $post_type['exclude_from_search'],
-					'publicly_queryable'        => $post_type['publicly_queryable'],
-					'capability_type'           => $post_type['capability_type']
+					'has_archive'               => true,
+					'exclude_from_search'       => false,
+					'publicly_queryable'        => true,
+					'capability_type'           => 'post'
 				)
             );
         }
-    }
+	}
+
+		public function storeCustomTaxonomies()
+	{
+			$labels = array(
+				'name'              => 'Property Status',
+				'singular_name'     => 'Property Status',
+				'search_items'      => 'Search ' . 'Property Status',
+				'all_items'         => 'All ' . 'Property Status',
+				'parent_item'       => 'Parent ' . 'Property Status',
+				'parent_item_colon' => 'Parent ' . 'Property Status' . ':',
+				'edit_item'         => 'Edit ' . 'Property Status',
+				'update_item'       => 'Update ' . 'Property Status',
+				'add_new_item'      => 'Add New ' . 'Property Status',
+				'new_item_name'     => 'New ' . 'Property Status' . ' Name',
+				'menu_name'         => 'Property Status',
+			);
+			$args = array(
+				'hierarchical'      => true,
+				'labels'            => $labels,
+				'show_ui'           => true,
+				'show_admin_column' => true,
+                'query_var'         => true,
+                //find out slug name Property Status
+				'rewrite'           => array( 'slug' => 'propertyStatus'),
+			);
+		// register the taxonomy
+		register_taxonomy( 'propertyStatus', array( 'property' ), $args );
+		wp_insert_term( 'Sale', 'propertyStatus', array( 'slug' => 'Sale') );
+		wp_insert_term('Rent', 'propertyStatus', array( 'slug' => 'Rent') );
+
+	}
+
+		function addMetaBox() {
+		  add_meta_box( 'my-meta-box-id', 'Property information', array($this, 'metaBoxCallBack'), 'property', 'normal', 'high' );
+		}
+	
+
+		function metaBoxCallBack( $post )
+		{
+			wp_nonce_field('save_price_data', 'price_data_meta_box_nonce');
+			$priceValue = get_post_meta( $post->ID, 'price_value_key', true );
+			$locationValue = get_post_meta( $post->ID, 'location_value_key', true );
+			$dateValue = get_post_meta( $post->ID, 'date_value_key', true );
+
+			
+			echo '<label for="price_field"> Property Price </label>';
+			echo '<input type="number" class="meta-box" id="price_field" name="price_field" size="25" value=" '. esc_attr( $priceValue) .'" /><br>';
+
+			echo '<label for="location_field"> Location </label>';
+			echo '<input type="text" class="meta-box" id="location_field" name="location_field" size="25" value=" ' . esc_attr( $locationValue ) . '" /><br>';
+
+			echo '<label for="date_field"> Date of construction </label>';
+			echo '<input type="date" class="date-meta-box" id="date_field" name="date_field" size="25"  value=" '. esc_attr( $dateValue ) . '" /><br>';
+			
+
+		}
+
+	
+
+		
+
 }
+	

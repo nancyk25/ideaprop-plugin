@@ -53,28 +53,6 @@ class Dashboard extends BaseController
         );
     }
 
-    // public function setSubPages()
-    // {
-    //         $this->subpages = array(
-    //         array(
-    //             'parent_slug' => 'ideaProp_plugin', 
-    //             'page_title' => 'Custom Post Types', 
-    //             'menu_title' => 'CPT', 
-    //             'capability' => 'manage_options', 
-    //             'menu_slug' => 'ideaProp_cpt', 
-    //             'callback' => function() { echo '<h1>CPT Manager</h1>'; }
-    //         ),
-    //         array(
-    //             'parent_slug' => 'ideaProp_plugin', 
-    //             'page_title' => 'Custom Taxonomies', 
-    //             'menu_title' => 'Taxonomies', 
-    //             'capability' => 'manage_options', 
-    //             'menu_slug' => 'ideaProp_taxonomies', 
-    //             'callback' => function() { echo '<h1>Taxonomies Manager</h1>'; }
-    //         )
-    //     );
-    // }
-
      public function add_settings_link($links){
         //add custom settings link
         $settings_link = '<a href="Admin.php?page=ideaProp_plugin">Settings</a>';
@@ -144,11 +122,5 @@ class Dashboard extends BaseController
 		);
 		$this->settings->setFields( $args );
 	}
-
-
-    // public function admin_index(){
-    //     //require template
-    //     require_once $this->plugin_path . 'templates/admin.php';
-    // }
 
 }

@@ -13,7 +13,8 @@
          return[
             Base\Enqueue::class,
             Pages\Dashboard::class,
-            Base\CustomPostTypeController::class            
+            Base\CustomPostTypeController::class,
+         
             ];
      }
 

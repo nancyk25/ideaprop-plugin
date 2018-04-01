@@ -1,22 +1,32 @@
 window.addEventListener("load", function() {
-  // store tabs variables
-  var tabs = document.querySelectorAll("ul.nav-tabs > li");
+  // store tabs variable
+  var myTabs = document.querySelectorAll("ul.nav-tabs > li");
 
-  for (var i = 0; i < tabs.length; i++) {
-    tabs[i].addEventListener("click", switchTab);
-  }
+  function myTabClicks(tabClickEvent) {
+    for (var i = 0; i < myTabs.length; i++) {
+      myTabs[i].classList.remove("active");
+    }
 
-  function switchTab(event) {
-    event.preventDefault();
-
-    document.querySelector("ul.nav-tabs li.active").classList.remove("active");
-    document.querySelector(".tab-pane.active").classList.remove("active");
-
-    var clickedTab = event.currentTarget;
-    var anchor = event.target;
-    var activePaneID = anchor.getAttribute("href");
+    var clickedTab = tabClickEvent.currentTarget;
 
     clickedTab.classList.add("active");
-    document.querySelector(activePaneID).classList.add("active");
+
+    tabClickEvent.preventDefault();
+
+    var myContentPanes = document.querySelectorAll(".tab-pane");
+
+    for (i = 0; i < myContentPanes.length; i++) {
+      myContentPanes[i].classList.remove("active");
+    }
+
+    var anchorReference = tabClickEvent.target;
+    var activePaneId = anchorReference.getAttribute("href");
+    var activePane = document.querySelector(activePaneId);
+
+    activePane.classList.add("active");
+  }
+
+  for (i = 0; i < myTabs.length; i++) {
+    myTabs[i].addEventListener("click", myTabClicks);
   }
 });
