@@ -4,11 +4,11 @@
  */
 /*
 Plugin Name: ideaProp Plugin
-Plugin URI: https://github.com/nancyk25
+Plugin URI: https://github.com/nancyk25/ideaprop-plugin
 Description: This is my submission for writing a custom plugin for IdeaTree.
 Version: 1.0.0
 Author: Nancy Kim
-Author URI: https://github.com/nancyk25
+Author URI: https://github.com/nancyk25/ideaprop-plugin
 License: GPLv2 or later
 Text Domain: ideaProp-plugin
 */
