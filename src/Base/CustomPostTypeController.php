@@ -23,7 +23,9 @@ class CustomPostTypeController extends BaseController
 
     public $subpages = array();
 
-    public $custom_post_types = array();
+	public $custom_post_types = array();
+	
+	public $metadata = array();
 
     public function register()
     {
@@ -49,7 +51,24 @@ class CustomPostTypeController extends BaseController
 			add_action('init', array( $this,'registerCustomPostType') );
 			add_action( 'init', array( $this, 'storeCustomTaxonomies' ));
 			add_action( 'add_meta_boxes', array( $this , 'addMetaBox' ));
+			add_filter('manage_property_posts_columns', array( $this, 'propertySetColumns'));
+			add_action('save_post', array( $this, 'saveMetaBoxData'));
+			add_action( 'manage_property_posts_custom_column', array($this, 'propertyCustomColumns'), 10 , 2);
 		}
+	}
+
+	function propertySetColumns( $columns )
+	{
+		unset($columns['categories']);
+		unset($columns['tags']);
+		unset($columns['date']);
+		$newColumns = array();
+		$newColumns['title'] = 'Title';
+		$newColumns['price'] = 'Price';
+		$newColumns['location'] = 'Location';
+		$newColumns['doc'] = 'Date of Construction';
+		return array_merge($columns,$newColumns);
+
 	}
 	
     public function setSubpages()
@@ -58,11 +77,12 @@ class CustomPostTypeController extends BaseController
 			array(
 				'parent_slug' => 'ideaProp_plugin', 
 				'page_title' => 'Custom Post Types', 
-				'menu_title' => 'CPT', 
+				'menu_title' => 'Property Manager', 
 				'capability' => 'manage_options', 
 				'menu_slug' => 'ideaProp_cpt',
 				//this call back set's the subpage under ideaProp called CPT and sends a callback to the template
 				'callback' => array( $this->callbacks, 'adminCpt' )
+				
 			)
 		);
     }
@@ -74,7 +94,7 @@ class CustomPostTypeController extends BaseController
                 array(
                     'option_group' => 'ideaProp_plugin_cpt_settings',
                     'option_name' => 'ideaProp_plugin_cpt',
-                    'callback' => array( $this->cpt_callbacks, 'cptSanitize' )
+                    // 'callback' => array( $this->cpt_callbacks, 'cptSanitize' )
                 )
 		);
 		$this->settings->setSettings( $args );
@@ -86,7 +106,7 @@ class CustomPostTypeController extends BaseController
 		$args = array(
 			array(
 				'id' => 'ideaProp_cpt_index',
-				'title' => 'Custom Post Type Manager',
+				'title' => 'Property Manager',
 				'callback' => array( $this->cpt_callbacks, 'cptSectionManager' ),
 				'page' => 'ideaProp_cpt'
 			)
@@ -200,7 +220,7 @@ class CustomPostTypeController extends BaseController
 				'description'           => $options['plural_name'] . 'Custom Post Type',
 				'supports'              => array( 'title', 'editor', 'thumbnail' ),
 				'taxonomies'            => array( 'category', 'post_tag'),
-				'hierarchical'          => false,
+				'hierarchical'          => true,
 				'public'                => $options['public'],
 				'show_ui'               => true,
 				'show_in_menu'          => true,
@@ -248,7 +268,8 @@ class CustomPostTypeController extends BaseController
 						'uploaded_to_this_item' => $post_type['uploaded_to_this_item'],
 						'items_list'            => $post_type['items_list'],
 						'items_list_navigation' => $post_type['items_list_navigation'],
-						'filter_items_list'     => $post_type['filter_items_list']
+						'filter_items_list'     => $post_type['filter_items_list'],
+						
 					),
 					'label'                     => $post_type['label'],
 					'description'               => $post_type['description'],
@@ -262,7 +283,7 @@ class CustomPostTypeController extends BaseController
 					),
 					// 'register_meta_box_cb'      => 'met',
 					'taxonomies'                => array('category','post_tag'),
-					'hierarchical'              => false,
+					'hierarchical'              => true,
 					'public'                    => true,
 					'show_ui'                   => $post_type['show_ui'],
 					'show_in_menu'              => $post_type['show_in_menu'],
@@ -311,29 +332,86 @@ class CustomPostTypeController extends BaseController
 	}
 
 		function addMetaBox() {
-		  add_meta_box( 'my-meta-box-id', 'Property information', array($this, 'metaBoxCallBack'), 'property', 'normal', 'high' );
+		  add_meta_box( 'property-meta-box-id', 'Property information', array($this, 'metaBoxCallBack'), 'property', 'normal', 'high' );
 		}
 	
 
 		function metaBoxCallBack( $post )
 		{
-			wp_nonce_field('save_price_data', 'price_data_meta_box_nonce');
-			$priceValue = get_post_meta( $post->ID, 'price_value_key', true );
-			$locationValue = get_post_meta( $post->ID, 'location_value_key', true );
-			$dateValue = get_post_meta( $post->ID, 'date_value_key', true );
+			wp_nonce_field('saveMetaBoxData', 'meta_data_box_nonce');
+
+			$priceValue = get_post_meta( $post->id, 'price_value_key', true );
+			$locationValue = get_post_meta( $post->id, 'location_value_key', true );
+			$dateValue = get_post_meta( $post->id, 'date_value_key', true );
 
 			
 			echo '<label for="price_field"> Property Price </label>';
-			echo '<input type="number" class="meta-box" id="price_field" name="price_field" size="25" value=" '. esc_attr( $priceValue) .'" /><br>';
+			echo '<input type="number" class="meta-box" id="price_value_key" name="price_field" size="25" value=" '. esc_attr( $priceValue) .'" /><br>';
 
 			echo '<label for="location_field"> Location </label>';
-			echo '<input type="text" class="meta-box" id="location_field" name="location_field" size="25" value=" ' . esc_attr( $locationValue ) . '" /><br>';
+			echo '<input type="text" class="meta-box" id="location_value_key" name="location_field" size="25" value=" ' . esc_attr( $locationValue ) . '" /><br>';
 
 			echo '<label for="date_field"> Date of construction </label>';
-			echo '<input type="date" class="date-meta-box" id="date_field" name="date_field" size="25"  value=" '. esc_attr( $dateValue ) . '" /><br>';
+			echo '<input type="date" class="date-meta-box" id="date_value_key" name="date_field" size="25"  value=" '. esc_attr( $dateValue ) . '" /><br>';
 			
 
 		}
+
+		public function saveMetaBoxData ( $post_id )
+		{
+			$post_type = get_post_type($post_id);
+
+			if ( ! isset( $_POST['meta_data_box_nonce'] ) ){
+				return;
+			}
+
+			if ( ! wp_verify_nonce( $_POST['meta_data_box_nonce'], 'saveMetaBoxData' ) ){
+				return;
+			}
+
+			if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ){
+				return;
+			}
+
+			if ( ! current_user_can( 'edit_post', $post_id ) ) {
+				return;
+			}
+			
+			$priceData = $_POST[ "price_field" ];
+
+			//save name of field here
+			if ( ! isset( $_POST['price_field'])) {
+				update_post_meta( $post_type, 'price_field', sanitize_text_field( $_POST[ "price_field" ] ));
+			} else if ( ! isset( $_POST['date_field'])){
+				update_post_meta( $post_type, 'date_field', sanitize_text_field($_POST[ "date_field" ] ) );
+			} else if ( ! isset( $_POST['location_field'])) {
+				update_post_meta( $post_type, 'location_field', sanitize_text_field($_POST[ "location_field" ] ) );
+			}
+
+		}
+
+			function propertyCustomColumns( $column, $post_id )
+				{
+					global $post;
+
+					switch( $column ){
+						case 'price' :
+						$price = get_post_meta( $post_id, 'price_value_key', true );
+						echo $price;
+							break;
+						case 'location' :
+						$location = get_post_meta( $post_id, 'location_value_key', true );
+						echo '<p>'.$location.'</p>';
+							break;
+						case 'doc' :
+						$date = get_post_meta( $post_id, 'date_value_key', true );
+						echo '<p>'.$date.'</p>';
+							break;
+					}
+				}
+
+		
+
 
 	
 

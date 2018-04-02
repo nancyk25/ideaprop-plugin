@@ -8,7 +8,7 @@ class CptCallbacks
 {
 	public function cptSectionManager()
 	{
-		echo 'Create as many Custom Post Types as you want.';
+		echo 'Create as many properties as you want.';
 	}
 	public function cptSanitize( $input )
 	{
